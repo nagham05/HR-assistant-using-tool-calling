@@ -1,0 +1,313 @@
+# 🧠 AI-Powered HR Assistant — Step-by-Step Logic Map
+
+---
+
+## **1️⃣ Define the Problem Space (What can the assistant do?)**
+
+Before *anything*, you define the **capabilities boundary**.
+
+Your HR assistant can handle **four categories of requests**:
+
+1. **General HR questions**
+   → Policies, explanations, generic HR knowledge
+   → ❌ No tool needed
+
+2. **Employee-specific data requests**
+   → Employee details
+   → Leave balance
+   → ✅ Tool needed
+
+3. **Content generation**
+   → Interview questions for a role
+   → ✅ Tool needed
+
+4. **Out-of-scope questions**
+   → Finance, tech support, random topics
+   → ❌ Should politely refuse or redirect
+
+📌 **This step is crucial** because it prevents hallucinations later.
+
+---
+
+## **2️⃣ User Input → Intent Understanding**
+
+Every interaction starts with **one question**:
+
+> “What is my leave balance?”
+
+Your assistant must internally answer:
+
+> ❓ *What is the user trying to do?*
+
+### Internally classify the intent:
+
+| Intent Type     | Example                        | Tool Needed |
+| --------------- | ------------------------------ | ----------- |
+| Policy question | “What is remote work policy?”  | ❌ No        |
+| Employee lookup | “Get my employee details”      | ✅ Yes       |
+| Leave check     | “How many leaves do I have?”   | ✅ Yes       |
+| Interview prep  | “Generate interview questions” | ✅ Yes       |
+
+📌 **This is the key decision point of the system**
+
+---
+
+## **3️⃣ Decide: Tool Call or Direct Answer**
+
+Once intent is known, the assistant branches:
+
+### 🔀 Decision Gate
+
+```
+IF user request requires external / structured data
+    → Call a tool
+ELSE
+    → Answer directly using LLM
+```
+
+Examples:
+
+* “Explain remote work policy”
+  → LLM answers directly
+
+* “What is my leave balance?”
+  → Needs employee data → Tool
+
+---
+
+## **4️⃣ Identify the Correct Tool**
+
+If a tool is required, the assistant must decide:
+
+> 🔧 *Which tool solves this?*
+
+Mapping looks like this:
+
+| User Intent         | Tool                           |
+| ------------------- | ------------------------------ |
+| Get employee info   | `get_employee_details`         |
+| Check leave balance | `check_leave_balance`          |
+| Generate questions  | `generate_interview_questions` |
+
+📌 **Only these tools are allowed**
+No made-up tool names.
+
+---
+
+## **5️⃣ Extract Required Arguments**
+
+Each tool needs **specific inputs**.
+
+The assistant must now ask internally:
+
+> ❓ *Do I have all required arguments?*
+
+### Examples:
+
+#### Leave balance tool:
+
+```
+Tool: check_leave_balance
+Required argument: employee_id
+```
+
+* If user said:
+  “What is my leave balance? My ID is E12345”
+  → ✅ Proceed
+
+* If user said:
+  “What is my leave balance?”
+  → ❌ Missing employee_id
+  → Assistant should ask a follow-up question
+
+📌 **No tool call should happen if arguments are missing**
+
+---
+
+## **6️⃣ Construct the Tool Call (Structured Output)**
+
+Now the assistant outputs a **structured request**, not natural language.
+
+Example internal output:
+
+```json
+{
+  "name": "check_leave_balance",
+  "arguments": {
+    "employee_id": "E12345"
+  }
+}
+```
+
+This is the **contract** between the LLM and your backend logic.
+
+---
+
+## **7️⃣ Execute the Tool (Backend Responsibility)**
+
+At this stage, the LLM stops thinking.
+
+Your system:
+
+1. Reads the tool name
+2. Matches it to a real function
+3. Executes it
+4. Receives structured data
+
+Example result:
+
+```json
+{
+  "remaining_leave_days": 12
+}
+```
+
+📌 The LLM **never executes code**
+📌 It only *requests* execution
+
+---
+
+## **8️⃣ Feed Tool Result Back to the LLM**
+
+Now the assistant needs to **explain the result to the user**.
+
+So you send this back as context:
+
+> “Here is the tool result: `{ remaining_leave_days: 12 }`
+> Respond to the user naturally.”
+
+This keeps answers:
+
+* Human-friendly
+* Context-aware
+* Non-robotic
+
+---
+
+## **9️⃣ Generate Final User-Facing Response**
+
+The LLM converts raw data into natural language:
+
+> “You currently have **12 leave days remaining**.”
+
+This is the **only message the user sees**.
+
+---
+
+## **🔁 10️⃣ Maintain Conversation State (Multi-Turn Logic)**
+
+If the user continues:
+
+> “And what about my employee details?”
+
+Your assistant should:
+
+* Remember the employee ID (if already provided)
+* Skip asking again
+* Call the correct tool directly
+
+This requires:
+
+* Conversation memory
+* Context persistence
+
+---
+
+## **🖥️ 11️⃣ UI Layer (Gradio)**
+
+Gradio is just the **presentation layer**:
+
+```
+User types → Assistant thinks → Tool runs → Answer shown
+```
+
+Gradio **does not**:
+
+* Decide intent
+* Call tools
+* Store logic
+
+It only:
+
+* Displays messages
+* Sends input
+* Shows output
+
+---
+
+## **🧩 Full System Flow (Bird’s-Eye View)**
+
+
++-------------------+
+|   User Input       |
++-------------------+
+          |
+          v
++-------------------+
+| Intent Classification |
+| (What type of HR question?) |
++-------------------+
+          |
+          v
++-------------------+
+| Is Tool Required?  |
++-------------------+
+     |           |
+     | No        | Yes
+     v           v
++---------------+  +-------------------+
+| LLM Answers   |  | Identify Correct Tool |
+| Directly      |  +-------------------+
++---------------+            |
+                             v
+                   +-------------------+
+                   | Check Required Arguments |
+                   +-------------------+
+                       |            |
+                       | Missing    | All Present
+                       v            v
+             +----------------+   +-------------------+
+             | Ask for missing |   | Generate Tool Call |
+             | info from user  |   +-------------------+
+             +----------------+            |
+                                           v
+                                  +-------------------+
+                                  | Execute Tool      |
+                                  +-------------------+
+                                           |
+                                           v
+                                  +-------------------+
+                                  | Return Tool Result |
+                                  +-------------------+
+                                           |
+                                           v
+                                  +-------------------+
+                                  | LLM Generates      |
+                                  | Human-Friendly     |
+                                  | Response          |
+                                  +-------------------+
+                                           |
+                                           v
+                                  +-------------------+
+                                  | Display to User    |
+                                  +-------------------+
+                                           |
+                                           v
+                                (Repeat for next user input)
+
+
+---
+
+## **Why This Project Is Important for You**
+
+This exercise teaches you:
+
+✅ Tool-augmented LLMs
+✅ Agent-like reasoning
+✅ Real backend-LLM separation
+✅ Anti-hallucination design
+✅ Production-ready AI thinking
+
+This is **exactly** how real AI assistants are built in companies.
+
+---
