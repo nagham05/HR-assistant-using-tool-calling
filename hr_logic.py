@@ -93,7 +93,7 @@ def handle_leave_query(data: dict):
         return "Please clarify which employee you mean."
 
     leave = check_leave_balance(employee_ids[0])
-    return f"Remaining Leave Days: {leave['remaining_days']}"
+    return f"Remaining Leave Days: {leave['remaining days']}" 
 
 
 def handle_interview_questions(data: dict):
