@@ -3,7 +3,8 @@ def get_employee_details(employee_id):
     employees = {
         "123": {"name": "Nagham Habli", "department": "AI development", "role": "Junior AI developer"},
         "456": {"name": "Omar Habli", "department": "ECE", "role": "Junior Electric Engineering"},
-        "789": {"name": "Marwa Baba", "department": "Software Development", "role": "Senior Software Engineer"}
+        "789": {"name": "Marwa Baba", "department": "Software Development", "role": "Senior Software Engineer"},
+        "912": {"name": "Omar Habli", "department": "Data Science", "role": "Data Scientist"}
     }
     return employees.get(employee_id, {"error": "Employee not found"})
 
@@ -12,7 +13,8 @@ def check_leave_balance(employee_id):
     leave_balances = {
         "123": {"remaining days": 15},
         "456": {"remaining days": 5},
-        "789": {"remaining days": 10}
+        "789": {"remaining days": 10},
+        "912": {"remaining days": 8}
     }
     return leave_balances.get(employee_id, {"error": "Employee not found"})
 
