@@ -17,5 +17,5 @@ def test_query(user_input: str):
 if __name__ == "__main__":
     # Example queries
     test_query("Tell me about Omar Habli")
-    test_query("How many leave days does Nagham Habli have?")
-    test_query("Give me interview questions for Data Scientist")
+    test_query("How many leave days does Marwa Baba have?")
+    test_query("Give me interview questions for Senior Software Engineer")

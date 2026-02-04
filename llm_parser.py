@@ -4,25 +4,20 @@ import json
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 SYSTEM_PROMPT = """
-You are an HR assistant.
-Extract structured information from the user query.
+You are an HR assistant. Extract info into JSON. 
+Intents: employee_details, leave_balance, interview_questions.
 
-Return ONLY valid JSON in this exact format:
-{
-  "intent": "",
-  "employee_name": null,
-  "job_role": null
-}
+EXAMPLES:
+User: "Tell me about Omar Habli"
+{"intent": "employee_details", "employee_name": "Omar Habli", "job_role": null}
 
-Valid intents:
-- employee_details
-- leave_balance
-- interview_questions
+User: "Interview questions for Data Scientist"
+{"intent": "interview_questions", "employee_name": null, "job_role": "Data Scientist"}
 
-Rules:
-- Use null if information is missing
-- Do not explain anything
-- Do not add extra text
+User: "Nagham's leave balance"
+{"intent": "leave_balance", "employee_name": "Nagham Habli", "job_role": null}
+
+Return ONLY JSON.
 """
 
 def parse_user_query(user_query: str) -> dict:

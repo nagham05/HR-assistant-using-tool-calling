@@ -20,26 +20,29 @@ def check_leave_balance(employee_id):
 
 # function to generate interview questions based on job role
 def generate_interview_questions(job_role):
+    # Your existing questions dictionary
     questions = {
-        "Junior AI developer": [
+        "junior ai developer": [
             "What is overfitting in machine learning?",
             "Explain the difference between supervised and unsupervised learning.",
             "How do you handle missing data in a dataset?"
         ],
-        "Junior Electric Engineering": [
+        "junior electric engineering": [
             "What is Ohm's Law?",
             "Explain the difference between AC and DC current.",
             "What are the main components of an electrical circuit?"
         ],
-        "Senior Software Engineer": [
+        "senior software engineer": [
             "Describe the software development lifecycle.",
             "How do you ensure code quality in your projects?",
             "What design patterns are you familiar with?"
         ],
-        "Data Scientist": [
+        "data scientist": [
             "What is the difference between a classification and regression problem?",
             "How do you handle multicollinearity in a dataset?",
             "Explain the concept of cross-validation."
         ]
     }
-    return questions.get(job_role, ["No questions available for this role."])
+    
+    # Normalize the input to lowercase for a case-insensitive match
+    return questions.get(job_role.lower(), ["No questions available for this role."])
