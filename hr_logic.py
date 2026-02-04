@@ -51,9 +51,13 @@ def extract_employee_ids_from_name(query):
 
     return matched_ids
 
+def handle_employee_details(data: dict):
+    employee_name = data["employee_name"]
 
-def handle_employee_details(query):
-    employee_ids = extract_employee_ids_from_name(query)
+    if not employee_name:
+        return "Please specify the employee name."
+
+    employee_ids = extract_employee_ids_from_name(employee_name)
 
     if not employee_ids:
         return "I couldn’t find any employee with that name."
@@ -65,45 +69,53 @@ def handle_employee_details(query):
                 f"- {get_employee_details(eid)['department']} (ID: {eid})"
                 for eid in employee_ids
             ) +
-            "\nPlease specify which one you mean."
+            "\nPlease clarify which one you mean."
         )
 
-    # Exactly one match
-    data = get_employee_details(employee_ids[0])
+    emp = get_employee_details(employee_ids[0])
 
     return (
-        f"Name: {data['name']}\n"
-        f"Department: {data['department']}\n"
-        f"Role: {data['role']}"
+        f"Name: {emp['name']}\n"
+        f"Department: {emp['department']}\n"
+        f"Role: {emp['role']}"
     )
 
-def handle_leave_query(query: str):
-    employee_ids = extract_employee_ids_from_name(query)
 
-    if not employee_ids:
-        return "I couldn’t find any employee with that name."
+def handle_leave_query(data: dict):
+    employee_name = data["employee_name"]
 
-    if len(employee_ids) > 1:
-        return (
-            "I found multiple employees with that name:\n" +
-            "\n".join(
-                f"- {get_employee_details(eid)['department']} (ID: {eid})"
-                for eid in employee_ids
-            ) +
-            "\nPlease specify which one you mean."
-        )
+    if not employee_name:
+        return "Please specify the employee name."
 
-    # Exactly one match
-    data = check_leave_balance(employee_ids[0])
+    employee_ids = extract_employee_ids_from_name(employee_name)
 
-    return f"Remaining Leave Days: {data['remaining days']}"
+    if len(employee_ids) != 1:
+        return "Please clarify which employee you mean."
+
+    leave = check_leave_balance(employee_ids[0])
+    return f"Remaining Leave Days: {leave['remaining_days']}"
 
 
-def handle_interview_questions(query: str):
-    
-    for role in job_roles:
-        if role.lower() in query:
-            questions = generate_interview_questions(role)
-            return f"Interview Questions for {role}:\n" + "\n".join(questions)
-    return "No questions available for this role."
+def handle_interview_questions(data: dict):
+    role = data["job_role"]
 
+    if not role:
+        return "Please specify the job role."
+
+    questions = generate_interview_questions(role)
+    return f"Interview Questions for {role}:\n" + "\n".join(questions)
+
+
+def handle_intent(intent_data: dict):
+    intent = intent_data["intent"]
+
+    if intent == "employee_details":
+        return handle_employee_details(intent_data)
+
+    elif intent == "leave_balance":
+        return handle_leave_query(intent_data)
+
+    elif intent == "interview_questions":
+        return handle_interview_questions(intent_data)
+
+    return "Unknown intent."
