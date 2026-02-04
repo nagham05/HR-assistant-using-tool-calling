@@ -25,7 +25,7 @@ def start_terminal_chat():
             break
             
         answer = chat(user_msg)
-        print(f"Assistant: {answer}")
+        print(f"Assistant: \n{answer}")
 
 if __name__ == "__main__":
     start_terminal_chat()
