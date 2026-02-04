@@ -13,9 +13,19 @@ def test_query(user_input: str):
     print("System response:")
     print(response)
 
+from main import chat
+
+def start_terminal_chat():
+    print("--- 🏢 HR Assistant Live Test ---")
+    print("(Type 'quit' to exit)")
+    
+    while True:
+        user_msg = input("\nYou: ")
+        if user_msg.lower() in ["quit", "exit"]:
+            break
+            
+        answer = chat(user_msg)
+        print(f"Assistant: {answer}")
 
 if __name__ == "__main__":
-    # Example queries
-    test_query("Tell me about Omar Habli")
-    test_query("How many leave days does Marwa Baba have?")
-    test_query("Give me interview questions for Senior Software Engineer")
+    start_terminal_chat()
