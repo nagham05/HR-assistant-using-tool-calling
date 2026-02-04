@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from llm_parser import parse_user_query
 from hr_logic import handle_intent, get_employee_details
 
