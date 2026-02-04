@@ -118,4 +118,4 @@ def handle_intent(intent_data: dict):
     elif intent == "interview_questions":
         return handle_interview_questions(intent_data)
 
-    return "Unknown intent."
+    return "Sorry, I couldn’t understand your HR request."
