@@ -1,5 +1,13 @@
 import requests
 import json
+from langsmith import traceable
+from langchain_community.chat_models import ChatOllama
+
+llm = ChatOllama(
+    model="llama3",
+    temperature=0
+)
+
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
@@ -20,6 +28,7 @@ User: "Nagham's leave balance"
 Return ONLY JSON.
 """
 
+@traceable
 def parse_user_query(user_query: str) -> dict:
     prompt = SYSTEM_PROMPT + "\nUser query: " + user_query
 
@@ -32,7 +41,7 @@ def parse_user_query(user_query: str) -> dict:
         }
     )
 
-    raw_output = response.json()["response"]
+    raw_output = llm.invoke(prompt).content
 
     try:
         return json.loads(raw_output)

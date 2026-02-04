@@ -4,6 +4,8 @@ Pipeline logic for Human Resources (HR) management system.
 Input -> Normalize -> Intent detection -> Tool needed? -> Which tool? -> Extract arguments -> Validate arguments
 -> Execute tool -> Interpret result -> Respond
 """
+from langsmith import traceable
+
 
 from hr_tools import (
     get_employee_details,
@@ -24,23 +26,7 @@ job_roles = [
     "Data Scientist"
 ]
 
-def handle_query(user_query: str):
-    user_query = user_query.lower()
-
-    if "employee" in user_query or "details" in user_query:
-        return handle_employee_details(user_query)
-
-    elif "leave" in user_query:
-        return handle_leave_query(user_query)
-
-    elif "interview" in user_query or "questions" in user_query:
-        return handle_interview_questions(user_query)
-
-    else:
-        return "Sorry, I couldn’t understand your HR request."
-
-
-
+@traceable
 def extract_employee_ids_from_name(query):
     query = query.lower()
     matched_ids = []
@@ -51,6 +37,7 @@ def extract_employee_ids_from_name(query):
 
     return matched_ids
 
+@traceable
 def handle_employee_details(data: dict):
     employee_name = data["employee_name"]
 
@@ -80,7 +67,7 @@ def handle_employee_details(data: dict):
         f"Role: {emp['role']}"
     )
 
-
+@traceable
 def handle_leave_query(data: dict):
     employee_name = data["employee_name"]
 
@@ -95,7 +82,7 @@ def handle_leave_query(data: dict):
     leave = check_leave_balance(employee_ids[0])
     return f"Remaining Leave Days: {leave['remaining days']}" 
 
-
+@traceable
 def handle_interview_questions(data: dict):
     role = data["job_role"]
 
@@ -105,7 +92,7 @@ def handle_interview_questions(data: dict):
     questions = generate_interview_questions(role)
     return f"Interview Questions for {role}:\n" + "\n".join(questions)
 
-
+@traceable
 def handle_intent(intent_data: dict):
     intent = intent_data["intent"]
 

@@ -1,4 +1,7 @@
+from langsmith import traceable
+
 # function to get employee details by employee ID
+@traceable
 def get_employee_details(employee_id):
     employees = {
         "123": {"name": "Nagham Habli", "department": "AI development", "role": "Junior AI developer"},
@@ -9,6 +12,7 @@ def get_employee_details(employee_id):
     return employees.get(employee_id, {"error": "Employee not found"})
 
 # function to check leave balance by employee ID 
+@traceable
 def check_leave_balance(employee_id):
     leave_balances = {
         "123": {"remaining days": 15},
@@ -19,6 +23,7 @@ def check_leave_balance(employee_id):
     return leave_balances.get(employee_id, {"error": "Employee not found"})
 
 # function to generate interview questions based on job role
+@traceable
 def generate_interview_questions(job_role):
     # Your existing questions dictionary
     questions = {
