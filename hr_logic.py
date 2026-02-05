@@ -104,5 +104,8 @@ def handle_intent(intent_data: dict):
 
     elif intent == "interview_questions":
         return handle_interview_questions(intent_data)
+    
+    elif intent == "hr_general":
+        return "HR_GENERAL"
 
     return "Sorry, I couldn’t understand your HR request."

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from llm_parser import parse_user_query
+from llm_parser import parse_user_query, llm
 from hr_logic import handle_intent, get_employee_details
 
 # This variable stays alive as long as your terminal session is running
@@ -25,6 +25,9 @@ def chat(user_input: str):
     intent_data = parse_user_query(user_input)
     response = handle_intent(intent_data)
     
+    if response == "HR_GENERAL":
+        return llm.invoke(user_input).content
+
     # STEP 3: If response asks for clarification, flip the 'memory' switch
     if "Please clarify" in response:
         session_state["awaiting_id"] = True
