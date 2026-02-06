@@ -4,16 +4,14 @@ load_dotenv()
 from llm_parser import parse_user_query, llm
 from hr_logic import handle_intent, get_employee_details
 
-# This variable stays alive as long as your terminal session is running
 session_state = {"awaiting_id": False}
 
 def chat(user_input: str):
     global session_state
     
-    # STEP 1: If we are waiting for an ID, don't even call the LLM.
-    # Just check if the user typed a number.
+    # 1. Handle clarification flow (Existing logic)
     if session_state["awaiting_id"] and user_input.strip().isdigit():
-        session_state["awaiting_id"] = False # Reset state
+        session_state["awaiting_id"] = False 
         emp = get_employee_details(user_input.strip())
         
         if "error" in emp:
@@ -21,17 +19,19 @@ def chat(user_input: str):
             
         return f"Details found!\nName: {emp['name']}\nDept: {emp['department']}\nRole: {emp['role']}"
 
-    # STEP 2: Normal LLM Parsing
+    # 2. Parse the query
     intent_data = parse_user_query(user_input)
-    response = handle_intent(intent_data)
     
-    if response == "HR_GENERAL":
-       return llm.invoke([
-        {"role": "user", "content": user_input}
-        ]).content
+    # --- FIX STARTS HERE ---
+    # Extract only the text if 'direct_response' exists
+    if intent_data.get("direct_response"):
+        session_state["awaiting_id"] = False
+        return intent_data["direct_response"] # Return ONLY the string value
+    # --- FIX ENDS HERE ---
 
+    # 3. Handle specific HR logic (leave, details, etc.)
+    response = handle_intent(intent_data)
 
-    # STEP 3: If response asks for clarification, flip the 'memory' switch
     if "Please clarify" in response:
         session_state["awaiting_id"] = True
     else:

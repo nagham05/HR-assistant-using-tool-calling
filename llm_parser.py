@@ -1,4 +1,5 @@
 import requests
+import re
 import json
 from langsmith import traceable
 from langchain_community.chat_models import ChatOllama
@@ -8,63 +9,57 @@ llm = ChatOllama(
     temperature=0
 )
 
-
-OLLAMA_URL = "http://localhost:11434/api/generate"
-
 SYSTEM_PROMPT = """
-You are an HR assistant. Extract information into JSON.
+You are a professional HR Assistant. Extract the user's intent into JSON.
 
-Possible intents:
-- employee_details
-- leave_balance
-- interview_questions
-- hr_general
+INTENTS:
+- employee_details: User asks about a specific person.
+- leave_balance: User asks about remaining vacation/leave for a person.
+- interview_questions: User needs help with hiring or screening.
+- hr_general: General HR knowledge, definitions, or policies.
 
-Rules:
-- Use employee_details ONLY if a specific employee is explicitly mentioned.
-- Use leave_balance ONLY if the question is about leave days for a named employee.
-- Use interview_questions if the user asks for interview or screening questions.
-- Use hr_general for questions about HR concepts, roles, responsibilities, policies, or definitions.
-- DO NOT assume an employee exists if no person is named.
+RULES:
+1. If intent is 'hr_general', write a detailed, professional Markdown response in 'direct_response'. 
+2. Use **bolding** for headers and bullet points for lists.
+3. Be thorough. Do not summarize.
+4. If intent is NOT 'hr_general', 'direct_response' must be null.
 
-Schema:
+JSON STRUCTURE:
 {
-  "intent": string,
-  "employee_name": string | null,
-  "job_role": string | null
+  "intent": "string",
+  "employee_name": "string or null",
+  "job_role": "string or null",
+  "direct_response": "string or null"
 }
-
-EXAMPLES:
-User: "Tell me about Omar Habli"
-{"intent": "employee_details", "employee_name": "Omar Habli", "job_role": null}
-
-User: "Interview questions for Data Scientist"
-{"intent": "interview_questions", "employee_name": null, "job_role": "Data Scientist"}
-
-User: "Nagham's leave balance"
-{"intent": "leave_balance", "employee_name": "Nagham Habli", "job_role": null}
-
-User: "What are the responsibilities of an HR manager?"
-{"intent": "hr_general", "employee_name": null, "job_role": null}
-
-Return ONLY valid JSON. No text outside JSON.
+Return ONLY JSON.
 """
 
 @traceable
 def parse_user_query(user_query: str) -> dict:
-    prompt = SYSTEM_PROMPT + "\nUser query: " + user_query
-
     raw_output = llm.invoke([
-    {"role": "system", "content": SYSTEM_PROMPT},
-    {"role": "user", "content": user_query}
-]).content
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_query}
+    ]).content
 
+    # 1. REMOVE CODE BLOCKS: Use regex to strip ```json and ``` 
+    clean_output = re.sub(r'```json\s?|```', '', raw_output).strip()
 
     try:
-        return json.loads(raw_output)
+        # 2. ATTEMPT TO PARSE: Convert the string to a Python dictionary
+        data = json.loads(clean_output)
+        return data
     except json.JSONDecodeError:
+        # 3. EMERGENCY FALLBACK: If JSON is still broken, 
+        # try to find the text between the "direct_response": "..." quotes
+        match = re.search(r'"direct_response":\s*"(.*)"', clean_output, re.DOTALL)
+        if match:
+            return {
+                "intent": "hr_general",
+                "direct_response": match.group(1).replace('\\n', '\n').replace('\\"', '"')
+            }
+        
+        # If all else fails, return the raw output so you can at least see the text
         return {
-            "intent": None,
-            "employee_name": None,
-            "job_role": None
+            "intent": "hr_general", 
+            "direct_response": raw_output
         }
