@@ -26,7 +26,10 @@ def chat(user_input: str):
     response = handle_intent(intent_data)
     
     if response == "HR_GENERAL":
-        return llm.invoke(user_input).content
+       return llm.invoke([
+        {"role": "user", "content": user_input}
+        ]).content
+
 
     # STEP 3: If response asks for clarification, flip the 'memory' switch
     if "Please clarify" in response:

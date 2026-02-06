@@ -54,7 +54,11 @@ Return ONLY valid JSON. No text outside JSON.
 def parse_user_query(user_query: str) -> dict:
     prompt = SYSTEM_PROMPT + "\nUser query: " + user_query
 
-    raw_output = llm.invoke(prompt).content
+    raw_output = llm.invoke([
+    {"role": "system", "content": SYSTEM_PROMPT},
+    {"role": "user", "content": user_query}
+]).content
+
 
     try:
         return json.loads(raw_output)
