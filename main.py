@@ -22,12 +22,11 @@ def chat(user_input: str):
     # 2. Parse the query
     intent_data = parse_user_query(user_input)
     
-    # --- FIX STARTS HERE ---
     # Extract only the text if 'direct_response' exists
     if intent_data.get("direct_response"):
         session_state["awaiting_id"] = False
-        return intent_data["direct_response"] # Return ONLY the string value
-    # --- FIX ENDS HERE ---
+        # .strip() removes whitespace, .strip('"') removes literal quote marks
+        return intent_data["direct_response"].strip().strip('"')
 
     # 3. Handle specific HR logic (leave, details, etc.)
     response = handle_intent(intent_data)

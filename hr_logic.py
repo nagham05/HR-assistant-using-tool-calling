@@ -84,7 +84,7 @@ def handle_leave_query(data: dict):
 
 @traceable
 def handle_interview_questions(data: dict):
-    role = data["job_role"]
+    role = data.get("job_role")
 
     if not role:
         return "Please specify the job role."

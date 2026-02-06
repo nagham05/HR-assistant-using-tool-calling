@@ -8,21 +8,21 @@ llm = ChatOllama(
     model="llama3",
     temperature=0
 )
-
 SYSTEM_PROMPT = """
 You are a professional HR Assistant. Extract the user's intent into JSON.
 
 INTENTS:
 - employee_details: User asks about a specific person.
-- leave_balance: User asks about remaining vacation/leave for a person.
-- interview_questions: User needs help with hiring or screening.
-- hr_general: General HR knowledge, definitions, or policies.
+- leave_balance: User asks about leave for a person.
+- interview_questions: User needs help with hiring for a SPECIFIC job role (e.g., "Data Scientist").
+- hr_general: General HR knowledge or definitions.
 
-RULES:
-1. If intent is 'hr_general', write a detailed, professional Markdown response in 'direct_response'. 
-2. Use **bolding** for headers and bullet points for lists.
-3. Be thorough. Do not summarize.
-4. If intent is NOT 'hr_general', 'direct_response' must be null.
+STRICT RULES:
+1. If intent is 'interview_questions', 'employee_details', or 'leave_balance':
+   - Set 'direct_response' to null.
+   - You MUST identify the 'job_role' or 'employee_name'.
+2. If intent is 'hr_general', provide a detailed Markdown response in 'direct_response'.
+3. Return ONLY valid JSON. Do not include any conversational text, headers, or explanations.
 
 JSON STRUCTURE:
 {
@@ -31,8 +31,8 @@ JSON STRUCTURE:
   "job_role": "string or null",
   "direct_response": "string or null"
 }
-Return ONLY JSON.
 """
+
 
 @traceable
 def parse_user_query(user_query: str) -> dict:
@@ -41,25 +41,19 @@ def parse_user_query(user_query: str) -> dict:
         {"role": "user", "content": user_query}
     ]).content
 
-    # 1. REMOVE CODE BLOCKS: Use regex to strip ```json and ``` 
-    clean_output = re.sub(r'```json\s?|```', '', raw_output).strip()
-
     try:
-        # 2. ATTEMPT TO PARSE: Convert the string to a Python dictionary
-        data = json.loads(clean_output)
-        return data
-    except json.JSONDecodeError:
-        # 3. EMERGENCY FALLBACK: If JSON is still broken, 
-        # try to find the text between the "direct_response": "..." quotes
-        match = re.search(r'"direct_response":\s*"(.*)"', clean_output, re.DOTALL)
-        if match:
-            return {
-                "intent": "hr_general",
-                "direct_response": match.group(1).replace('\\n', '\n').replace('\\"', '"')
-            }
+        # 1. Look for the JSON block using Regex (everything between { and })
+        # This will ignore "Here is the extracted intent..."
+        json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
         
-        # If all else fails, return the raw output so you can at least see the text
-        return {
-            "intent": "hr_general", 
-            "direct_response": raw_output
-        }
+        if json_match:
+            clean_json_str = json_match.group(0)
+            # 2. Convert only the extracted block into a Python dictionary
+            return json.loads(clean_json_str)
+        
+        # Fallback if no brackets are found at all
+        return {"intent": "hr_general", "direct_response": raw_output, "job_role": None}
+
+    except Exception:
+        # Emergency fallback if JSON is still malformed
+        return {"intent": "hr_general", "direct_response": raw_output, "job_role": None}
