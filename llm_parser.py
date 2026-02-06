@@ -33,7 +33,6 @@ JSON STRUCTURE:
 }
 """
 
-
 @traceable
 def parse_user_query(user_query: str) -> dict:
     raw_output = llm.invoke([
@@ -42,18 +41,35 @@ def parse_user_query(user_query: str) -> dict:
     ]).content
 
     try:
-        # 1. Look for the JSON block using Regex (everything between { and })
-        # This will ignore "Here is the extracted intent..."
+        # 1. Extract JSON block
         json_match = re.search(r'\{.*\}', raw_output, re.DOTALL)
-        
-        if json_match:
-            clean_json_str = json_match.group(0)
-            # 2. Convert only the extracted block into a Python dictionary
-            return json.loads(clean_json_str)
-        
-        # Fallback if no brackets are found at all
-        return {"intent": "hr_general", "direct_response": raw_output, "job_role": None}
+
+        if not json_match:
+            # No JSON at all → treat everything as HR general response
+            return {
+                "intent": "hr_general",
+                "employee_name": None,
+                "job_role": None,
+                "direct_response": raw_output.strip()
+            }
+
+        json_text = json_match.group(0)
+        data = json.loads(json_text)
+
+        # 2. Capture text OUTSIDE the JSON
+        remaining_text = raw_output.replace(json_text, "").strip()
+
+        # 3. If HR general + empty direct_response → fill it
+        if data.get("intent") == "hr_general" and not data.get("direct_response"):
+            data["direct_response"] = remaining_text
+
+        return data
 
     except Exception:
-        # Emergency fallback if JSON is still malformed
-        return {"intent": "hr_general", "direct_response": raw_output, "job_role": None}
+        # Emergency fallback
+        return {
+            "intent": "hr_general",
+            "employee_name": None,
+            "job_role": None,
+            "direct_response": raw_output.strip()
+        }
