@@ -78,7 +78,7 @@ with gr.Blocks(title="HR Assistant") as demo:
             gr.Markdown("### 💡 Try these examples:")
             
             ex1 = gr.Button("👤 Tell me about Omar Habli", elem_classes="example-btn")
-            ex2 = gr.Button("🏖️ Check Nagham's leave balance", elem_classes="example-btn")
+            ex2 = gr.Button("🏖️ Check Nagham Habli leave balance", elem_classes="example-btn")
             ex3 = gr.Button("📋 Interview questions for Data Scientist", elem_classes="example-btn")
             ex4 = gr.Button("ℹ️ What does HR do?", elem_classes="example-btn")
         
@@ -107,7 +107,7 @@ with gr.Blocks(title="HR Assistant") as demo:
 
     # Event handlers
     ex1.click(lambda: "Tell me about Omar Habli", None, msg)
-    ex2.click(lambda: "Check Nagham's leave balance", None, msg)
+    ex2.click(lambda: "Check Nagham Habli leave balance", None, msg)
     ex3.click(lambda: "Interview questions for Data Scientist", None, msg)
     ex4.click(lambda: "What does HR do?", None, msg)
     
